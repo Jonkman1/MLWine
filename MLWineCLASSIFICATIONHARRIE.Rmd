@@ -1,0 +1,432 @@
+---
+title: "MachinelearningonWineCLASSIFICATION"
+author: "Harrie"
+date: "12/28/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(caret)
+library(rpart)   
+library(randomForest)
+library(visdat)
+library(GGally)
+library(gt)
+library(skimr)
+library(corrplot)
+library(visNetwork)
+library(sparkline)
+
+```
+
+
+
+
+# 1. INTRODUCTION
+In this tutorial, we’ll build the following classification models using the tidymodels framework, which is a collection of R packages for modeling and machine learning using tidyverse principles:
+
+- Logistic Regression
+- Random Forest,
+- XGBoost (extreme gradient boosted trees),
+- K-nearest neighbor
+
+Wine research
+
+
+# PROBLEM DEFINITION
+
+
+# 2.DATA UNDERSTANDING
+
+In Data Understanding, you:
+
+- Import data
+- Clean data
+- Format data properly
+- Create new variables
+- Get an overview about the complete data
+- Split data into training and test set using stratified sampling
+- Discover and visualize the data to gain insights
+
+```{r}
+
+#df<- read.csv(url("https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv",
+#                  header = TRUE,
+#                  sep = ";"))
+```
+
+
+2.1 Import data
+
+First of all, let’s import the data:
+
+```{r}
+wd <- readRDS('/Users/harriejonkman/Desktop/RAnalyse/Machinelearning/BarcelonaR_workshop_Introduction_to_RStudio_and_Shiny_servers/Workshop/BarcelonaR_workshop_Introduction_to_Machine_Learning/data/data.rds')
+```
+
+2.2 Clean the data
+
+To get a first impression of the data we take a look at the top 4 rows:
+
+
+```{r}
+library(gt)
+
+wd %>% 
+  slice_head(n = 4) %>% 
+  gt() # print output using gt
+```
+
+2.3 Format data
+
+Next, we take a look at the data structure and check wether all data formats are correct:
+
+- Numeric variables should be formatted as integers (int) or double precision floating point numbers (dbl).
+
+- Categorical (nominal and ordinal) variables should usually be formatted as factors (fct) and not characters (chr). Especially, if they don’t have many levels.
+
+
+
+```{r}
+glimpse(wd)
+```
+
+The package `visdat` helps us to explore the data class structure visually:
+
+
+```{r}
+library(visdat)
+
+vis_dat(wd)
+```
+
+2.4 Missing data
+
+
+Now let’s turn our attention to missing data. Missing data can be viewed with the function vis_miss from the package visdat. We arrange the data by columns with most missingness:
+
+```{r}
+vis_miss(wd, sort_miss = TRUE)
+```
+
+
+Create new variables
+One very important thing you may want to do at the beginning of your data science project is to create new variable combinations. For example here I want to work with classification and change the contiunues variable `quality` to categorical variable `quality_two`
+
+
+```{r}
+
+percentage <- prop.table(table(wd$quality)) * 100
+cbind(freq=table(wd$quality), percentage=percentage)
+```
+
+With `recipe` package we can do a lot at the same time
+
+```{r}
+set.seed(123)
+
+wdNA<-
+  wd %>%
+  mutate(
+    # Convert quality to a factor
+    quality = ifelse(quality >5, "high", "low"),
+    quality = factor(quality)
+)
+  
+```
+
+
+Take out missing data.
+
+```{r}
+wdNA<-wdNA %>% drop_na()
+
+```
+`
+
+
+Check the missings
+
+
+```{r}
+vis_miss(wdNA, sort_miss = TRUE)
+```
+
+  
+  
+Let us look at the dependent variable closely.
+
+```{r}
+
+percentage <- prop.table(table(wdNA$quality)) * 100
+cbind(freq=table(wdNA$quality), percentage=percentage)
+```
+
+```{r}
+wdNA %>%
+  ggplot(aes(quality)) +
+  geom_bar() +
+  ggtitle("Quality of wine, Low (0) and High (1)")
+```
+
+
+## 2.6 Fix column names
+
+```{r}
+colnames(wdNA) <- wdNA %>% 
+  colnames() %>% str_replace_all(pattern = " ", replacement = "_")
+colnames(wdNA)
+```
+
+
+
+
+
+## 2.7 Data overview
+```{r}
+library(skimr)
+skim(wdNA)
+```
+
+
+We have:
+
+-
+
+```{r}
+library(GGally)
+wdNA %>%
+  ggscatmat(alpha=0.2)
+```
+
+Another option is to use ggpairs, where we even can integrate categorical variables like our dependent variable price_category and ocean proximity in the output:
+
+```{r}
+wdNA %>%
+  ggpairs()
+```
+
+## A summary of the data frame
+
+```{r}
+summary(wdNA)
+glimpse(wdNA)
+```
+
+
+## EXPLORATIVE DATA ANALYSIS (EDA).
+
+
+```{r}
+library(corrplot)
+wdNA %>%
+   select(-quality) %>%
+  cor() %>% 
+  corrplot.mixed(upper = "circle",
+                 tl.cex = 1,
+                 tl.pos = 'lt',
+                 number.cex = 0.75)
+```
+
+
+## Split the data into: a) Train set, b) Test set
+
+All functions below come from the `rsample` package
+
+```{r}
+set.seed(12345) # to fix randomisation by setting the seed (reproducibility)
+
+data_split <- initial_split(wdNA, prop = 0.8) # Use 80% of the data for training
+
+train_data <- training(data_split)
+
+test_data  <- testing(data_split)
+
+```
+
+
+## Validation set
+
+Remember that we already partitioned our data set into a training set and test set. This lets us judge whether a given model will generalize well to new data. However, using only two partitions may be insufficient when doing many rounds of hyperparameter tuning (which we don’t perform in this tutorial but it is always recommended to use a validation set).
+
+Therefore, it is usually a good idea to create a so called validation set. Watch this short video from Google’s Machine Learning crash course to learn more about the value of a validation set.
+
+We use k-fold crossvalidation to build a set of 5 validation folds with the function vfold_cv. We also use stratified sampling:
+
+```{r}
+set.seed(100)
+
+wine_cv <-
+ vfold_cv(train_data, 
+          v = 5, 
+          strata = quality) 
+```
+
+We will come back to the validation set after we specified our models
+
+# MODELING AND DATA ANALYSIS 
+
+## Prepare models
+
+```{r}
+wdNA_rec <-
+  recipe(quality ~ .,
+         data=train_data) %>%
+         prep()
+```
+
+```{r}
+wdNA_rec
+```
+
+## Execute pre-processing
+The testing data can now be transformed using the exact same steps, weights, and categorization used to pre-process the training data. To do this, another function with a cooking term is used: bake(). Notice that the testing() function is used in order to extract the appropriate data set.
+
+```{r}
+wdNATEST <-wdNA_rec %>%
+  bake(testing(data_split))
+```
+
+```{r}
+glimpse(wdNATEST)
+```
+
+Performing the same operation over the training data is redundant, because that data has already been prepped. To load the prepared training data into a variable, we use juice(). It will extract the data from the iris_recipe object.
+
+```{r}
+wdNATRAING <- juice(wdNA_rec)
+glimpse(wdNATRAING)
+```
+
+
+## Model training
+The process of specifying our models is always as follows:
+
+Pick a model type   
+- set the engine  
+- Set the mode: regression or classification   
+- You can choose the model type and engine from this list.
+
+### Logistic regression
+
+```{r}
+log_spec <- logistic_reg() %>%  
+  set_engine(engine = "glm") %>%  
+  set_mode("classification") %>% 
+  fit(quality~., data=train_data)
+
+  tidy(log_spec)
+```
+
+```{r}
+tidy(log_spec, exponentiate=TRUE)
+```
+
+### Significant ODDS
+
+```{r}
+tidy(log_spec, exponentiate=TRUE) %>%
+  filter(p.value < 0.05)
+```
+
+
+# Model prediction
+
+```{r}
+# Class prediction
+pred_class<-predict(log_spec,
+                       new_data=test_data,
+                       type="class")
+
+pred_class[1:5,]
+```
+
+Test data class probabilities
+
+```{r}
+# predicted probabilities
+pred_proba<-predict(log_spec,
+                    new_data=test_data,
+                    type="prob")
+
+
+pred_proba[1:5,]
+```
+
+
+
+# Final data preparation for model evaluation
+
+```{r}
+quality_results<-test_data %>%
+  select(quality) %>%
+  bind_cols(pred_class, pred_proba)
+
+quality_results[1:5,]
+```
+
+
+## Model evaluation
+
+# confusion matrix
+
+```{r}
+conf_mat(quality_results, truth = quality,
+         estimate = .pred_class)
+```
+
+### accuracy
+```{r}
+accuracy(quality_results, truth=quality, 
+         estimate=.pred_class)
+```
+
+
+## sensitivity
+```{r}
+sens(quality_results, truth=quality, estimate = .pred_class)
+```
+
+### specificity
+
+```{r}
+spec(quality_results, truth=quality, estimate = .pred_class)
+```
+
+
+
+
+```{r}
+custom_metrics<-metric_set(accuracy, sens, spec)
+
+custom_metrics(quality_results,
+               truth=quality,
+               estimate=.pred_class)
+```
+
+
+
+```{r}
+library(caret)
+
+confusionMatrix(quality_results$.pred_class,
+                quality_results$quality,
+                pos="high")
+```
+
+
+# RESULTS SUMMARIZED
+
+# CONCLUDING REMARKS
+
+
+
+

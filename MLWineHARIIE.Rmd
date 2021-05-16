@@ -1,0 +1,359 @@
+---
+title: "MachinelearningonWine"
+author: "Harrie"
+date: "12/28/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(tidyverse)
+library(finalfit)
+library(tidymodels)
+library(caret)
+library(rpart)   
+library(randomForest)
+
+```
+
+
+
+
+# INTRODUCTION
+
+
+
+Wine research
+
+
+# PROBLEM DEFINITION
+
+
+# DATA INGESTION, DATA PREPROCESSING AND EXPLORATIVE DATA-ANALYSIS
+
+
+
+```{r}
+#df <- readRDS('/Users/harriejonkman/Desktop/RAnalyse/Machinelearning/BarcelonaR_workshop_Introduction_to_RStudio_and_Shiny_servers/Workshop/BarcelonaR_workshop_Introduction_to_Machine_Learning/data/data.rds')
+```
+
+```{r}
+wf<-readRDS("wine.rds")
+```
+
+
+
+## A summary of the data frame
+
+```{r}
+glimpse(wf)
+```
+
+```{r}
+missing_glimpse(wf)
+```
+
+```{r}
+ff_glimpse(wf)
+```
+
+## A correlation matrix of the data
+
+```{r}
+cor(wf)
+```
+
+
+
+## Fix column names
+
+```{r}
+colnames(wf) <- wf %>% 
+  colnames() %>% str_replace_all(pattern = " ", replacement = "_")
+colnames(wf)
+```
+
+
+
+## Remove any missing values
+```{r}
+wf <- wf %>% na.omit()
+
+```
+
+
+## EXPLORATIVE DATA ANALYSIS (EDA).
+
+## Other way to visualise correlation. For this you need the package `corrplot`
+
+```{r}
+library(corrplot)
+wf %>% cor() %>% 
+  corrplot.mixed(upper = "circle",
+                 tl.cex = 1,
+                 tl.pos = 'lt',
+                 number.cex = 0.75)
+```
+
+
+
+## Split the data into: a) Train set, b) Test set
+
+Now we work on the last pre-model analysis. All functions below come from the `rsample` package, which is part of `tidymodels`. First we set the seed to fix the randomisation and to make reproducable possible. We use 80% of the dataset for the trainingset. We split it and than make a training- and test-dataset
+
+```{r}
+set.seed(12345) 
+
+data_split <- initial_split(wf, prop = 0.8) 
+
+train_data <- training(data_split)
+
+test_data  <- testing(data_split)
+
+```
+
+
+# MODELING AND DATA ANALYSIS 
+
+## Lineair modelling
+For the continues outcome or target variable `quaity` we first research some different lineair regression models and choose the best one. For the below tasks, we store each formula in a different R object.
+
+We have to define the data: 
+- The target variable. `quality` is the target variable and it is numeric
+- The features of the model (predictors) are the other variables here and they are numeric also.
+
+Futhermore, we esign a simple formula to predict the target variable. In this formula (f1) all the available 11 predictors are used.
+
+```{r}
+f1 <- formula(quality ~ fixed_acidity + volatile_acidity + citric_acid + 
+                   residual_sugar + chlorides + free_sulfur_dioxide + 
+                   total_sulfur_dioxide + density + pH + sulphates + alcohol)
+```
+
+
+We can also create and engineer another formula in which we removed some of the correlated features and use 8 predictors.
+
+```{r}
+f2 <- formula(quality ~ fixed_acidity + volatile_acidity + residual_sugar +
+                   chlorides + free_sulfur_dioxide + pH + sulphates + alcohol)
+```
+
+
+Let us fit a linear regression model to the data. What we do:
+- We created an object that will store the model fit.    
+- We specify the model.   
+- We specify also that we work with regression because of the continue target variable (`quality`)
+- We specify also the `lm` package to train the model
+- We add the formula and the training data to fit the model
+
+```{r}
+lm_fit <- 
+  linear_reg() %>% 
+  set_mode("regression") %>% 
+  set_engine("lm") %>% 
+  fit(f1, data = train_data) 
+```
+
+Show the results
+
+```{r}
+print(lm_fit$fit)
+```
+
+Show the results in another way.
+
+```{r}
+summary(lm_fit$fit)
+```
+
+We can also visualise the fit summary by using the `broom` package which is inside `tidymodels`.
+
+```{r}
+tidy(lm_fit$fit) %>% mutate_if(is.numeric, round, 3)
+```
+
+After we worked with lineair regression, it is possible to work with other models which maybe give us better results. Let us first look at decision tree. For this you need decision tree and for this you have to install and open the library of `rpart`. We see similar steps here
+- defining an object `dt_fit`   
+- telling that we work with decision tree   
+- once again set the mode on regression   
+- once again set the engine on `rpart`   
+- fit the formula on the training data-set   
+
+```{r}
+
+dt_fit <- 
+  decision_tree() %>% 
+  set_mode("regression") %>%
+  set_engine("rpart") %>% 
+  fit(f1, data = train_data)
+```
+
+Print the results
+
+```{r}
+print(dt_fit$fit)
+```
+
+As a sidestep we can visualise this, but than we have to install and open the `visNetwork` and `sparkline` packages. Then we see this.
+
+```{r}
+library(visNetwork)
+library(sparkline)
+visTree(dt_fit$fit)
+```
+
+
+A third model we use here is RandomForest.You need to install `randomForest` and open the library `randomForest`. And again the same steps:
+- define object `rf_fit`    
+- tell we want to use randomforst    
+- set the mode again on regression      
+- set the engine here on randomForest    
+- fit the model on the training_set   
+
+```{r}
+rf_fit <- 
+  rand_forest() %>% 
+  set_mode("regression") %>%
+  set_engine("randomForest") %>% 
+  fit(f1, data = train_data)
+```
+
+Print these results.
+
+```{r}
+print(rf_fit$fit)
+```
+
+
+
+# EVALUATION AND PREDICTION
+
+Now we have three objects which we have to evaluate. We do this on the test-set. We compare three models (`lm_fit`, `dt_fit` and `rf_fit`) on the MSE score.
+
+## Accuracy of the lm-model
+
+```{r}
+lm_pred <- test_data %>% 
+  bind_cols(predict(object = lm_fit, new_data = test_data))
+```
+
+Now we see a new column, `.pred`, with a predicted scores for each row. 
+
+```{r}
+View(lm_pred)
+
+```
+
+```{r}
+lm_pred <- test_data %>% 
+  bind_cols(predict(object = lm_fit, new_data = test_data)) %>% 
+  mutate(pred = round(.pred, 0))
+
+```
+
+
+```{r}
+lm_mse <- lm_pred %>% 
+  summarise(type = "lm",
+            MSE = round(mean((pred - quality)^2), 4))
+```
+
+
+```{r}
+head(lm_mse)
+```
+
+
+## Accuracy of the Decision Tree Model
+
+```{r}
+dt_pred <- test_data %>% 
+  bind_cols(predict(object = dt_fit, new_data = test_data)) %>% 
+  rename(pred = .pred) %>% 
+  mutate(pred = round(pred, 0))
+```
+
+```{r}
+dt_mse <- dt_pred %>% 
+  summarise(type = "dt",
+            MSE = round(mean((pred - quality)^2), 4))
+```
+
+
+```{r}
+head(dt_mse)
+```
+
+## Accuracy of the Random Forest Model
+
+```{r}
+rf_pred <- test_data %>% 
+  bind_cols(predict(object = rf_fit, new_data = test_data)) %>% 
+  rename(pred = .pred) %>% 
+  mutate(pred = round(pred, 0))
+```
+
+
+```{r}
+rf_mse <- rf_pred %>% 
+  summarise(type = "rf",
+            MSE = round(mean((pred - quality)^2), 4))
+```
+
+
+```{r}
+head(rf_mse)
+```
+
+
+
+
+## All results together
+
+Let us put all the results together.
+
+```{r}
+res <- bind_rows(lm_mse, dt_mse, rf_mse)
+```
+
+
+Let us show these results.
+
+```{r}
+head(res)
+```
+We choose the random_forest model as the best opportunity here. Let us look at it once again.
+
+```{r}
+View(rf_pred)
+```
+
+```{r}
+head(rf_pred)
+```
+
+
+# RESULTS SUMMARIZED
+
+
+In this simple scenario, we may be interested in seeing how the model performs on the testing data that was left out. The code below will fit the model to the training data and apply it to the testing data. There are other ways we could have done this, but the way we do it here will be useful when we start using more complex models where we need to tune model parameters.
+
+After the model is fit and applied, we collect the performance metrics and display them and show the predictions from the testing data.
+
+```{r}
+head(rf_pred)
+```
+```{r}
+metrics(rf_pred, quality, pred)
+```
+
+# CONCLUDING REMARKS
+
+[](https://towardsdatascience.com/modelling-with-tidymodels-and-parsnip-bae2c01c131c)
+
+
