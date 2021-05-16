@@ -1,5 +1,5 @@
 ---
-title: "MachinelearningonWineCLASSIFICATION"
+title: "Machine learning on Wine data. CLASSIFICATION"
 author: "Harrie"
 date: "12/28/2020"
 output: html_document
@@ -28,50 +28,50 @@ library(sparkline)
 ```
 
 
+# INTRODUCTION
+`Tidymodels` is the successor to the `caret` package which is used during the Introduction to Data Science course of the Harvard University. `Tidymodels` is a collection of modeling packages that, like the `tidyverse`, have consistent API and are designed to work together specifically to support predictive analytics and machine learning. Core tidymodel packages include: parsnip, recipes, rsample and tune. Collectively, these packages provide a grammar for modeling that makes things a lot easier and provide a unified modeling and analysis interface to seamlessly access several model varieteis in R. (References xxx) 
+Different packages
 
 
-# 1. INTRODUCTION
-In this tutorial, we’ll build the following classification models using the tidymodels framework, which is a collection of R packages for modeling and machine learning using tidyverse principles:
-
-- Logistic Regression
-- Random Forest,
-- XGBoost (extreme gradient boosted trees),
-- K-nearest neighbor
-
-Wine research
+Last months I tried to learn working with `tidymodels`. I tried to finish the Capstone course with the use of this packages. 
 
 
 # PROBLEM DEFINITION
+Data mining approaches are use to predict human wine taste preferences that are based on easily available analytical tests at certification step. A dataset on red wine from Portugal is used here to research quality of the wine and different predictors (Cortez et al., 2009) Supervised machine learning support us in this. In this world two kind of algorithms are often used. One is called regression and the other is called classification. In this study we use regression for predicting quality of wine based on the predictors.
 
 
-# 2.DATA UNDERSTANDING
+The wine data used here contains the following independent and dependent variables
 
-In Data Understanding, you:
+Independent variables: (symbol I)
+- I1 Fixed acidity (g(tartaric acid/dm3)
+- I2 Volatile acidity (g(acetic acid)/dm3)
+- I3 Citric acid (g/dm3)
+- I4 Residual sugar (g/dm3)
+- I5 Chlorides (g(sodium chloride)/dm3)
+- I6 Free sulfar dioxide (mg/dm3)
+- I7 Total sulfar dioxide (mg/dm3)
+- I8 Density (g/cm3)
+- I9 pH
+- I10 Sulphates (g(potassium sulphate)/dm3)
+- I11 Alcohol (vol%)
 
-- Import data
-- Clean data
-- Format data properly
-- Create new variables
-- Get an overview about the complete data
-- Split data into training and test set using stratified sampling
-- Discover and visualize the data to gain insights
+Dependent variable: (symbol D)
+- D1 Quality
+
+
+# DATA LOADING AND PREPROCESSING 
+
+Let us first load the dataset.
 
 ```{r}
-
-#df<- read.csv(url("https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv",
-#                  header = TRUE,
-#                  sep = ";"))
+wf<-readRDS("wine.rds")
 ```
 
-
-2.1 Import data
-
-First of all, let’s import the data:
+Let us give a summary of the data frame.
 
 ```{r}
-wd <- readRDS('/Users/harriejonkman/Desktop/RAnalyse/Machinelearning/BarcelonaR_workshop_Introduction_to_RStudio_and_Shiny_servers/Workshop/BarcelonaR_workshop_Introduction_to_Machine_Learning/data/data.rds')
+glimpse(wf)
 ```
-
 2.2 Clean the data
 
 To get a first impression of the data we take a look at the top 4 rows:
@@ -80,7 +80,7 @@ To get a first impression of the data we take a look at the top 4 rows:
 ```{r}
 library(gt)
 
-wd %>% 
+wf %>% 
   slice_head(n = 4) %>% 
   gt() # print output using gt
 ```
@@ -96,7 +96,7 @@ Next, we take a look at the data structure and check wether all data formats are
 
 
 ```{r}
-glimpse(wd)
+glimpse(wf)
 ```
 
 The package `visdat` helps us to explore the data class structure visually:
@@ -105,7 +105,7 @@ The package `visdat` helps us to explore the data class structure visually:
 ```{r}
 library(visdat)
 
-vis_dat(wd)
+vis_dat(wf)
 ```
 
 2.4 Missing data
@@ -114,7 +114,7 @@ vis_dat(wd)
 Now let’s turn our attention to missing data. Missing data can be viewed with the function vis_miss from the package visdat. We arrange the data by columns with most missingness:
 
 ```{r}
-vis_miss(wd, sort_miss = TRUE)
+vis_miss(wf, sort_miss = TRUE)
 ```
 
 
@@ -124,8 +124,8 @@ One very important thing you may want to do at the beginning of your data scienc
 
 ```{r}
 
-percentage <- prop.table(table(wd$quality)) * 100
-cbind(freq=table(wd$quality), percentage=percentage)
+percentage <- prop.table(table(wf$quality)) * 100
+cbind(freq=table(wf$quality), percentage=percentage)
 ```
 
 With `recipe` package we can do a lot at the same time
@@ -134,7 +134,7 @@ With `recipe` package we can do a lot at the same time
 set.seed(123)
 
 wdNA<-
-  wd %>%
+  wf %>%
   mutate(
     # Convert quality to a factor
     quality = ifelse(quality >5, "high", "low"),
@@ -147,7 +147,7 @@ wdNA<-
 Take out missing data.
 
 ```{r}
-wdNA<-wdNA %>% drop_na()
+wdNA<-na.omit(wdNA)
 
 ```
 `
@@ -187,9 +187,6 @@ colnames(wdNA)
 ```
 
 
-
-
-
 ## 2.7 Data overview
 ```{r}
 library(skimr)
@@ -207,7 +204,7 @@ wdNA %>%
   ggscatmat(alpha=0.2)
 ```
 
-Another option is to use ggpairs, where we even can integrate categorical variables like our dependent variable price_category and ocean proximity in the output:
+Another option is to use ggpairs:
 
 ```{r}
 wdNA %>%
@@ -317,6 +314,8 @@ Pick a model type
 
 ### Logistic regression
 
+We run the model and show the estimates.
+
 ```{r}
 log_spec <- logistic_reg() %>%  
   set_engine(engine = "glm") %>%  
@@ -325,23 +324,24 @@ log_spec <- logistic_reg() %>%
 
   tidy(log_spec)
 ```
+Here we write down the results in Odds-ratio's which are better to understand.
 
 ```{r}
 tidy(log_spec, exponentiate=TRUE)
 ```
 
-### Significant ODDS
+Let us show the same results but only the signficant predictors on quality.
 
 ```{r}
 tidy(log_spec, exponentiate=TRUE) %>%
   filter(p.value < 0.05)
 ```
 
-
 # Model prediction
 
+Now it is time to use the test data. Let us show the class predictions for the first 5 cases.
+
 ```{r}
-# Class prediction
 pred_class<-predict(log_spec,
                        new_data=test_data,
                        type="class")
@@ -349,10 +349,9 @@ pred_class<-predict(log_spec,
 pred_class[1:5,]
 ```
 
-Test data class probabilities
+Test data class probabilities (the predicted probabilities for the first five cases) 
 
 ```{r}
-# predicted probabilities
 pred_proba<-predict(log_spec,
                     new_data=test_data,
                     type="prob")
@@ -363,7 +362,7 @@ pred_proba[1:5,]
 
 
 
-# Final data preparation for model evaluation
+Here we see the final data preparation for model evaluation
 
 ```{r}
 quality_results<-test_data %>%
@@ -375,34 +374,34 @@ quality_results[1:5,]
 
 
 ## Model evaluation
-
-# confusion matrix
+Let us evaluate the defined model. For this we use the confusion matrix. 120 case were high and predicted as such and 116 cases were low and predicted as such. 37 wre low but predicted as high and 45 had a true high score but predicted as low. 
 
 ```{r}
 conf_mat(quality_results, truth = quality,
          estimate = .pred_class)
 ```
 
-### accuracy
+Let us now research the accuracy of the model.
+
 ```{r}
 accuracy(quality_results, truth=quality, 
          estimate=.pred_class)
 ```
 
 
-## sensitivity
+What can we say about the sensitivity of the model. 
 ```{r}
 sens(quality_results, truth=quality, estimate = .pred_class)
 ```
 
-### specificity
+What about the specificity of the model.
 
 ```{r}
 spec(quality_results, truth=quality, estimate = .pred_class)
 ```
 
 
-
+Now these three scores together.
 
 ```{r}
 custom_metrics<-metric_set(accuracy, sens, spec)
@@ -414,6 +413,9 @@ custom_metrics(quality_results,
 
 
 
+# RESULTS SUMMARIZED
+Let us summarize the results. And it is easy to use the good and old `caret` package.
+
 ```{r}
 library(caret)
 
@@ -423,9 +425,11 @@ confusionMatrix(quality_results$.pred_class,
 ```
 
 
-# RESULTS SUMMARIZED
 
-# CONCLUDING REMARKS
+
+# References
+
+
 
 
 

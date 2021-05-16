@@ -25,52 +25,68 @@ library(randomForest)
 
 
 # INTRODUCTION
+`Tidymodels` is the successor to the `caret` package which is used during the Introduction to Data Science course of the Harvard University. `Tidymodels` is a collection of modeling packages that, like the `tidyverse`, have consistent API and are designed to work together specifically to support predictive analytics and machine learning. Core tidymodel packages include: parsnip, recipes, rsample and tune. Collectively, these packages provide a grammar for modeling that makes things a lot easier and provide a unified modeling and analysis interface to seamlessly access several model varieteis in R. (References xxx) 
+Different packages
 
 
-
-Wine research
+Last months I tried to learn working with `tidymodels`. I tried to finish the Capstone course with the use of this packages. 
 
 
 # PROBLEM DEFINITION
+Data mining approaches are use to predict human wine taste preferences that are based on easily available analytical tests at certification step. A dataset on red wine from Portugal is used here to research quality of the wine and different predictors (Cortez et al., 2009) Supervised machine learning support us in this. In this world two kind of algorithms are often used. One is called regression and the other is called classification. In this study we use regression for predicting quality of wine based on the predictors.
 
 
-# DATA INGESTION, DATA PREPROCESSING AND EXPLORATIVE DATA-ANALYSIS
+The wine data used here contains the following independent and dependent variables
+
+Independent variables: (symbol I)
+- I1 Fixed acidity (g(tartaric acid/dm3)
+- I2 Volatile acidity (g(acetic acid)/dm3)
+- I3 Citric acid (g/dm3)
+- I4 Residual sugar (g/dm3)
+- I5 Chlorides (g(sodium chloride)/dm3)
+- I6 Free sulfar dioxide (mg/dm3)
+- I7 Total sulfar dioxide (mg/dm3)
+- I8 Density (g/cm3)
+- I9 pH
+- I10 Sulphates (g(potassium sulphate)/dm3)
+- I11 Alcohol (vol%)
+
+Dependent variable: (symbol D)
+- D1 Quality
 
 
+# DATA LOADING AND PREPROCESSING 
 
-```{r}
-#df <- readRDS('/Users/harriejonkman/Desktop/RAnalyse/Machinelearning/BarcelonaR_workshop_Introduction_to_RStudio_and_Shiny_servers/Workshop/BarcelonaR_workshop_Introduction_to_Machine_Learning/data/data.rds')
-```
+Let us first load the dataset.
 
 ```{r}
 wf<-readRDS("wine.rds")
 ```
 
-
-
-## A summary of the data frame
+Let us give a summary of the data frame.
 
 ```{r}
 glimpse(wf)
 ```
 
+Do we see missings?
+
 ```{r}
 missing_glimpse(wf)
 ```
+What kind of variables do we have and what are their scores?
 
 ```{r}
 ff_glimpse(wf)
 ```
 
-## A correlation matrix of the data
+Let us make correlation matrix of the data.
 
 ```{r}
 cor(wf)
 ```
 
-
-
-## Fix column names
+Let us define the column names on a consistent way.
 
 ```{r}
 colnames(wf) <- wf %>% 
@@ -78,18 +94,17 @@ colnames(wf) <- wf %>%
 colnames(wf)
 ```
 
+Let us also remove any missing values.
 
-
-## Remove any missing values
 ```{r}
-wf <- wf %>% na.omit()
+wf <- na.omit(wf)
 
 ```
 
 
 ## EXPLORATIVE DATA ANALYSIS (EDA).
 
-## Other way to visualise correlation. For this you need the package `corrplot`
+Now we have preprocessed the data we explore them.  let us first visualise correlations within the dataset. For this you need the package `corrplot`
 
 ```{r}
 library(corrplot)
@@ -102,9 +117,8 @@ wf %>% cor() %>%
 
 
 
-## Split the data into: a) Train set, b) Test set
-
-Now we work on the last pre-model analysis. All functions below come from the `rsample` package, which is part of `tidymodels`. First we set the seed to fix the randomisation and to make reproducable possible. We use 80% of the dataset for the trainingset. We split it and than make a training- and test-dataset
+## SPLITTING THE DATA
+Now we split the data into: a) Train set, b) Test set. Here we work on the last pre-model analysis. All functions below come from the `rsample` package, which is part of `tidymodels`. First we set the seed to fix the randomisation and to make reproducable possible. We use 80% of the dataset for the trainingset. We split it and than make a training- and test-dataset
 
 ```{r}
 set.seed(12345) 
@@ -120,8 +134,8 @@ test_data  <- testing(data_split)
 
 # MODELING AND DATA ANALYSIS 
 
-## Lineair modelling
-For the continues outcome or target variable `quaity` we first research some different lineair regression models and choose the best one. For the below tasks, we store each formula in a different R object.
+## 1. Lineair modelling
+For the continues outcome or target variable `quality` we first research some different lineair regression models and choose the best one. For the below tasks, we store each formula in a different R object.
 
 We have to define the data: 
 - The target variable. `quality` is the target variable and it is numeric
@@ -130,17 +144,9 @@ We have to define the data:
 Futhermore, we esign a simple formula to predict the target variable. In this formula (f1) all the available 11 predictors are used.
 
 ```{r}
-f1 <- formula(quality ~ fixed_acidity + volatile_acidity + citric_acid + 
+formula <- formula(quality ~ fixed_acidity + volatile_acidity + citric_acid + 
                    residual_sugar + chlorides + free_sulfur_dioxide + 
                    total_sulfur_dioxide + density + pH + sulphates + alcohol)
-```
-
-
-We can also create and engineer another formula in which we removed some of the correlated features and use 8 predictors.
-
-```{r}
-f2 <- formula(quality ~ fixed_acidity + volatile_acidity + residual_sugar +
-                   chlorides + free_sulfur_dioxide + pH + sulphates + alcohol)
 ```
 
 
@@ -156,7 +162,7 @@ lm_fit <-
   linear_reg() %>% 
   set_mode("regression") %>% 
   set_engine("lm") %>% 
-  fit(f1, data = train_data) 
+  fit(formula, data = train_data) 
 ```
 
 Show the results
@@ -177,6 +183,8 @@ We can also visualise the fit summary by using the `broom` package which is insi
 tidy(lm_fit$fit) %>% mutate_if(is.numeric, round, 3)
 ```
 
+
+## 2. Decision tree
 After we worked with lineair regression, it is possible to work with other models which maybe give us better results. Let us first look at decision tree. For this you need decision tree and for this you have to install and open the library of `rpart`. We see similar steps here
 - defining an object `dt_fit`   
 - telling that we work with decision tree   
@@ -190,7 +198,7 @@ dt_fit <-
   decision_tree() %>% 
   set_mode("regression") %>%
   set_engine("rpart") %>% 
-  fit(f1, data = train_data)
+  fit(formula, data = train_data)
 ```
 
 Print the results
@@ -207,7 +215,7 @@ library(sparkline)
 visTree(dt_fit$fit)
 ```
 
-
+## 3. Random forest
 A third model we use here is RandomForest.You need to install `randomForest` and open the library `randomForest`. And again the same steps:
 - define object `rf_fit`    
 - tell we want to use randomforst    
@@ -220,7 +228,7 @@ rf_fit <-
   rand_forest() %>% 
   set_mode("regression") %>%
   set_engine("randomForest") %>% 
-  fit(f1, data = train_data)
+  fit(formula, data = train_data)
 ```
 
 Print these results.
