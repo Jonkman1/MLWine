@@ -364,4 +364,42 @@ metrics(rf_pred, quality, pred)
 
 [](https://towardsdatascience.com/modelling-with-tidymodels-and-parsnip-bae2c01c131c)
 
+# References
+Attalides, N. (2020). [Introduction to machine learning. Barcelona. Presentation](https://www.barcelonar.org/workshops/BarcelonaR_Introduction_to_Machine_Learning.pdf) 
+
+Barter, R.(2020). [Tidymodels: tidy machine learning in R](http://www.rebeccabarter.com/blog/2020-03-25_machine_learning/) 
+
+Baumer, B. Kaplan, D.T., Horton, N.J. (2017). *Modern data science with R*. CRCPress: Boca Raton.
+
+Boehmke, B. & Greenwell, B. (2020). *Hands on machine learning with R*. [Bookdown version](https://bradleyboehmke.github.io/HOML)
+
+Cortez, P., Cerdeira, A., Almeida, F., Matos, T. & Reis, J. (2009). Modeling wine prefernces by data mining from physicochemical properties. *Decision Support Systems, 47*, 547-533. 
+
+Hartie, T., Tibskirani, R. & Friedmann, J. (2009). *The elements of statistical learning. Data mining, inference and prediction*. 2nd edition. Springer: New York.
+
+Irizarry, R.A. (2020). *Introduction to data science. Data analysis and prediction algorithms with R*. CRC Press: Boca Raton.
+
+James, S., Witten, D., Hastie, T.. & Tibskirani, R. (2013). *An introduction to statistical learning with application in R*. 
+
+Jonkman, H. (2019-2021). [Harrie's hoekje, his website with different blogs on machine learning in Dutch](http://www.harriejonkman.nl/HarriesHoekje/) 
+
+Kuhn, M. 7 Johnson, K. (2013). *Applied predictive modeling*. Springer: New York.
+
+Kuhn, M. & Johnson, K. (2019). [Feature engineering and selection: A practical approach for predictive models](www.feat.engineering)
+
+Lendway, L. (2020). 2020_north-tidymodels.[Introduction on github](https://github.com/llendway/2020_north_tidymodels)
+
+Lewis, J.E. (2020). [Coding machine learning models](https://www.youtube.com/watch?v=WlL44_is4TU)
+
+Raoniar, R. (2021). Modeling binary logistic regression using tidymodels library in R (Part 1). [Towards data science](https://towardsdatascience.com/modelling-binary-logistic-regression-using-tidymodels-library-in-r-part-1-c1bdce0ac055)
+
+Ruiz, E. (2019). [A gentle introduction to tidymodels](https://rviews.rstudio.com/2019/06/19/a-gentle-intro-to-tidymodels/)
+
+Seyedian, A. (2021). [Medical cost personal datasets. Insurance forcast by using linear regression](https://www.r-bloggers.com/2021/02/using-tidymodels-to-predict-health-insurance-cost/)
+
+Silge, J. (2020). [Get started with tidymodels and #TidyTuesdag Palmer penguins](https://juliasilge.com/blog/palmer-penguins/)
+
+Silge, J. (2021). [Supervised machine learning case studies in R](https://supervised-ml-course)
+
+Tidymodels. [Tidymodels website](https://www.tidymodels.org/)
 
