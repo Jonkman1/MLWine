@@ -11,7 +11,6 @@
 
 <meta name="author" content="Harrie" />
 
-<meta name="date" content="2020-12-28" />
 
 <title>Machine learning on Wine data. CLASSIFICATION</title>
 
@@ -351,7 +350,7 @@ pre code {
 
 <h1 class="title toc-ignore">Machine learning on Wine data. CLASSIFICATION</h1>
 <h4 class="author">Harrie</h4>
-<h4 class="date">12/28/2020</h4>
+<h4 class="date">22/05/2021</h4>
 
 </div>
 
@@ -419,15 +418,35 @@ library(corrplot)</code></pre>
 library(sparkline)</code></pre>
 <div id="introduction" class="section level1">
 <h1>INTRODUCTION</h1>
-<p><code>Tidymodels</code> is the successor to the <code>caret</code> package which is used during the Introduction to Data Science course of the Harvard University. <code>Tidymodels</code> is a collection of modeling packages that, like the <code>tidyverse</code>, have consistent API and are designed to work together specifically to support predictive analytics and machine learning. Core tidymodel packages include: parsnip, recipes, rsample and tune. Collectively, these packages provide a grammar for modeling that makes things a lot easier and provide a unified modeling and analysis interface to seamlessly access several model varieteis in R. (References xxx) Different packages</p>
+<p><code>Tidymodels</code> is the successor to the <code>caret</code> package which is used during the <em>Introduction to Data Science</em>-course of the Harvard University (Kuhn &amp; Johnson, 2013; Irizarry, 2020). <code>Tidymodels</code> is a collection of modeling packages that, like the <code>tidyverse</code>, have consistent API and are designed to work together specifically to support predictive analytics and machine learning. Different books (Kuhn &amp; Silge, 2021; Kuhn en Johnson, 2019) blogs (Lendway, 2020; Roamiar (2021); Ruiz (2019), Barter (2019; Seyedia (2021) and couses/video’s (Lewis, 2020; Silge, 2021; Silge 2020) I followed and looked at. I tried to learn this new system and wrote different blogs in Dutch on this (Jonkman, 2021).</p>
+<p>Core tidymodel packages include: parsnip, recipes, rsample and tune. Collectively, these packages provide a grammar for modeling that makes things a lot easier and provide a unified modeling and analysis interface to seamlessly access several model varieteis in R.</p>
+<ul>
+<li><code>tidymodels</code> is a meta-package that installs and load the core packages listed below that you need for modeling and machine learning;<br />
+</li>
+<li><code>recipes</code> is tidy interface for to data pre-processing tools for feature/variables engineering;<br />
+</li>
+<li><code>rsample</code> provides infrastucture for efficient data splitting and resampling;<br />
+</li>
+<li><code>parsnip</code> is a tidy, unified interface to models that can be used to try a range of models without getting bagged down in the syntactical minutae of the underlying packages;<br />
+</li>
+<li><code>tune</code> helps you optimize the hyperparameters of your model and chose pre-processing steps;<br />
+</li>
+<li><code>yardstick</code> measures the effectiveness of models during performance metrics;<br />
+</li>
+<li><code>workflow</code> bundles your pre-processing modeling and post-processing together;<br />
+</li>
+<li><code>dials</code> creates and manages tuning parameters and parameters grids;<br />
+</li>
+<li><code>brooms</code> convert the information in common statistical R objects into user-friendly predictable formats.</li>
+</ul>
 <p>Last months I tried to learn working with <code>tidymodels</code>. I tried to finish the Capstone course with the use of this packages.</p>
 </div>
 <div id="problem-definition" class="section level1">
 <h1>PROBLEM DEFINITION</h1>
-<p>Data mining approaches are use to predict human wine taste preferences that are based on easily available analytical tests at certification step. A dataset on red wine from Portugal is used here to research quality of the wine and different predictors (Cortez et al., 2009) Supervised machine learning support us in this. In this world two kind of algorithms are often used. One is called regression and the other is called classification. In this study we use regression for predicting quality of wine based on the predictors.</p>
+<p>Data mining approaches are use to predict human wine taste preferences that are based on easily available analytical tests at certification step. A dataset on red wine from Portugal is used here to research quality of the wine and different predictors (Cortez et al., 2009) Supervised machine learning support us in this. In this world two kind of algorithms are often used. One is called regression and the other is called classification. In this study we use classification for predicting quality of wine (high,low) based on the predictors.</p>
 <p>The wine data used here contains the following independent and dependent variables</p>
-<p>Independent variables: (symbol I) - I1 Fixed acidity (g(tartaric acid/dm3) - I2 Volatile acidity (g(acetic acid)/dm3) - I3 Citric acid (g/dm3) - I4 Residual sugar (g/dm3) - I5 Chlorides (g(sodium chloride)/dm3) - I6 Free sulfar dioxide (mg/dm3) - I7 Total sulfar dioxide (mg/dm3) - I8 Density (g/cm3) - I9 pH - I10 Sulphates (g(potassium sulphate)/dm3) - I11 Alcohol (vol%)</p>
-<p>Dependent variable: (symbol D) - D1 Quality</p>
+<p>Independent variables: (symbol I) - I1 <em>Fixed acidity</em> (g(tartaric acid/dm3) - I2 <em>Volatile acidity</em> (g(acetic acid)/dm3) - I3 <em>Citric acid</em> (g/dm3) - I4 <em>Residual sugar</em> (g/dm3) - I5 <em>Chlorides</em> (g(sodium chloride)/dm3) - I6 <em>Free sulfar dioxide</em> (mg/dm3) - I7 <em>Total sulfar dioxide</em> (mg/dm3) - I8 <em>Density</em> (g/cm3) - I9 <em>pH</em> - I10 <em>Sulphates</em> (g(potassium sulphate)/dm3) - I11 <em>Alcohol</em> (vol%)</p>
+<p>Dependent variable: (symbol D) - D1 <em>Quality</em></p>
 </div>
 <div id="data-loading-and-preprocessing" class="section level1">
 <h1>DATA LOADING AND PREPROCESSING</h1>
@@ -460,7 +479,7 @@ wf %&gt;%
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#cexhdwmpbm .gt_table {
+#knvgjkymxr .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -485,7 +504,7 @@ wf %&gt;%
   border-left-color: #D3D3D3;
 }
 
-#cexhdwmpbm .gt_heading {
+#knvgjkymxr .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -497,7 +516,7 @@ wf %&gt;%
   border-right-color: #D3D3D3;
 }
 
-#cexhdwmpbm .gt_title {
+#knvgjkymxr .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -507,7 +526,7 @@ wf %&gt;%
   border-bottom-width: 0;
 }
 
-#cexhdwmpbm .gt_subtitle {
+#knvgjkymxr .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -517,13 +536,13 @@ wf %&gt;%
   border-top-width: 0;
 }
 
-#cexhdwmpbm .gt_bottom_border {
+#knvgjkymxr .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#cexhdwmpbm .gt_col_headings {
+#knvgjkymxr .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -538,7 +557,7 @@ wf %&gt;%
   border-right-color: #D3D3D3;
 }
 
-#cexhdwmpbm .gt_col_heading {
+#knvgjkymxr .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -558,7 +577,7 @@ wf %&gt;%
   overflow-x: hidden;
 }
 
-#cexhdwmpbm .gt_column_spanner_outer {
+#knvgjkymxr .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -570,15 +589,15 @@ wf %&gt;%
   padding-right: 4px;
 }
 
-#cexhdwmpbm .gt_column_spanner_outer:first-child {
+#knvgjkymxr .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#cexhdwmpbm .gt_column_spanner_outer:last-child {
+#knvgjkymxr .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#cexhdwmpbm .gt_column_spanner {
+#knvgjkymxr .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -590,7 +609,7 @@ wf %&gt;%
   width: 100%;
 }
 
-#cexhdwmpbm .gt_group_heading {
+#knvgjkymxr .gt_group_heading {
   padding: 8px;
   color: #333333;
   background-color: #FFFFFF;
@@ -612,7 +631,7 @@ wf %&gt;%
   vertical-align: middle;
 }
 
-#cexhdwmpbm .gt_empty_group_heading {
+#knvgjkymxr .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -627,15 +646,15 @@ wf %&gt;%
   vertical-align: middle;
 }
 
-#cexhdwmpbm .gt_from_md > :first-child {
+#knvgjkymxr .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#cexhdwmpbm .gt_from_md > :last-child {
+#knvgjkymxr .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#cexhdwmpbm .gt_row {
+#knvgjkymxr .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -654,7 +673,7 @@ wf %&gt;%
   overflow-x: hidden;
 }
 
-#cexhdwmpbm .gt_stub {
+#knvgjkymxr .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -666,7 +685,7 @@ wf %&gt;%
   padding-left: 12px;
 }
 
-#cexhdwmpbm .gt_summary_row {
+#knvgjkymxr .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -676,7 +695,7 @@ wf %&gt;%
   padding-right: 5px;
 }
 
-#cexhdwmpbm .gt_first_summary_row {
+#knvgjkymxr .gt_first_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -686,7 +705,7 @@ wf %&gt;%
   border-top-color: #D3D3D3;
 }
 
-#cexhdwmpbm .gt_grand_summary_row {
+#knvgjkymxr .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -696,7 +715,7 @@ wf %&gt;%
   padding-right: 5px;
 }
 
-#cexhdwmpbm .gt_first_grand_summary_row {
+#knvgjkymxr .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -706,11 +725,11 @@ wf %&gt;%
   border-top-color: #D3D3D3;
 }
 
-#cexhdwmpbm .gt_striped {
+#knvgjkymxr .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#cexhdwmpbm .gt_table_body {
+#knvgjkymxr .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -719,7 +738,7 @@ wf %&gt;%
   border-bottom-color: #D3D3D3;
 }
 
-#cexhdwmpbm .gt_footnotes {
+#knvgjkymxr .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -733,13 +752,13 @@ wf %&gt;%
   border-right-color: #D3D3D3;
 }
 
-#cexhdwmpbm .gt_footnote {
+#knvgjkymxr .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding: 4px;
 }
 
-#cexhdwmpbm .gt_sourcenotes {
+#knvgjkymxr .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -753,46 +772,46 @@ wf %&gt;%
   border-right-color: #D3D3D3;
 }
 
-#cexhdwmpbm .gt_sourcenote {
+#knvgjkymxr .gt_sourcenote {
   font-size: 90%;
   padding: 4px;
 }
 
-#cexhdwmpbm .gt_left {
+#knvgjkymxr .gt_left {
   text-align: left;
 }
 
-#cexhdwmpbm .gt_center {
+#knvgjkymxr .gt_center {
   text-align: center;
 }
 
-#cexhdwmpbm .gt_right {
+#knvgjkymxr .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#cexhdwmpbm .gt_font_normal {
+#knvgjkymxr .gt_font_normal {
   font-weight: normal;
 }
 
-#cexhdwmpbm .gt_font_bold {
+#knvgjkymxr .gt_font_bold {
   font-weight: bold;
 }
 
-#cexhdwmpbm .gt_font_italic {
+#knvgjkymxr .gt_font_italic {
   font-style: italic;
 }
 
-#cexhdwmpbm .gt_super {
+#knvgjkymxr .gt_super {
   font-size: 65%;
 }
 
-#cexhdwmpbm .gt_footnote_marks {
+#knvgjkymxr .gt_footnote_marks {
   font-style: italic;
   font-size: 65%;
 }
 </style>
-<div id="cexhdwmpbm" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+<div id="knvgjkymxr" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
   
   <thead class="gt_col_headings">
     <tr>
@@ -1526,6 +1545,25 @@ confusionMatrix(quality_results$.pred_class,
 </div>
 <div id="references" class="section level1">
 <h1>References</h1>
+<p>Attalides, N. (2020). <a href="https://www.barcelonar.org/workshops/BarcelonaR_Introduction_to_Machine_Learning.pdf">Introduction to machine learning. Barcelona. Presentation</a></p>
+<p>Barter, R.(2020). <a href="http://www.rebeccabarter.com/blog/2020-03-25_machine_learning/">Tidymodels: tidy machine learning in R</a></p>
+<p>Baumer, B. Kaplan, D.T., Horton, N.J. (2017). <em>Modern data science with R</em>. CRCPress: Boca Raton.</p>
+<p>Boehmke, B. &amp; Greenwell, B. (2020). <em>Hands on machine learning with R</em>. <a href="https://bradleyboehmke.github.io/HOML">Bookdown version</a></p>
+<p>Cortez, P., Cerdeira, A., Almeida, F., Matos, T. &amp; Reis, J. (2009). Modeling wine prefernces by data mining from physicochemical properties. <em>Decision Support Systems, 47</em>, 547-533.</p>
+<p>Hartie, T., Tibskirani, R. &amp; Friedmann, J. (2009). <em>The elements of statistical learning. Data mining, inference and prediction</em>. 2nd edition. Springer: New York.</p>
+<p>Irizarry, R.A. (2020). <em>Introduction to data science. Data analysis and prediction algorithms with R</em>. CRC Press: Boca Raton.</p>
+<p>James, S., Witten, D., Hastie, T.. &amp; Tibskirani, R. (2013). <em>An introduction to statistical learning with application in R</em>.</p>
+<p>Jonkman, H. (2019-2021). <a href="http://www.harriejonkman.nl/HarriesHoekje/">Harrie’s hoekje, his website with different blogs on machine learning in Dutch</a></p>
+<p>Kuhn, M. 7 Johnson, K. (2013). <em>Applied predictive modeling</em>. Springer: New York.</p>
+<p>Kuhn, M. &amp; Johnson, K. (2019). <a href="www.feat.engineering">Feature engineering and selection: A practical approach for predictive models</a></p>
+<p>Lendway, L. (2020). 2020_north-tidymodels.<a href="https://github.com/llendway/2020_north_tidymodels">Introduction on github</a></p>
+<p>Lewis, J.E. (2020). <a href="https://www.youtube.com/watch?v=WlL44_is4TU">Coding machine learning models</a></p>
+<p>Raoniar, R. (2021). Modeling binary logistic regression using tidymodels library in R (Part 1). <a href="https://towardsdatascience.com/modelling-binary-logistic-regression-using-tidymodels-library-in-r-part-1-c1bdce0ac055">Towards data science</a></p>
+<p>Ruiz, E. (2019). <a href="https://rviews.rstudio.com/2019/06/19/a-gentle-intro-to-tidymodels/">A gentle introduction to tidymodels</a></p>
+<p>Seyedian, A. (2021). <a href="https://www.r-bloggers.com/2021/02/using-tidymodels-to-predict-health-insurance-cost/">Medical cost personal datasets. Insurance forcast by using linear regression</a></p>
+<p>Silge, J. (2020). <a href="https://juliasilge.com/blog/palmer-penguins/">Get started with tidymodels and #TidyTuesdag Palmer penguins</a></p>
+<p>Silge, J. (2021). <a href="https://supervised-ml-course">Supervised machine learning case studies in R</a></p>
+<p>Tidymodels. <a href="https://www.tidymodels.org/">Tidymodels website</a></p>
 </div>
 
 
