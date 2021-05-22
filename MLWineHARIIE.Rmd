@@ -1,8 +1,8 @@
 ---
 title: "MachinelearningonWine"
 author: "Harrie"
-date: "12/28/2020"
-output: html_document
+date: "22/05/2021"
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -25,34 +25,43 @@ library(randomForest)
 
 
 # INTRODUCTION
-`Tidymodels` is the successor to the `caret` package which is used during the Introduction to Data Science course of the Harvard University. `Tidymodels` is a collection of modeling packages that, like the `tidyverse`, have consistent API and are designed to work together specifically to support predictive analytics and machine learning. Core tidymodel packages include: parsnip, recipes, rsample and tune. Collectively, these packages provide a grammar for modeling that makes things a lot easier and provide a unified modeling and analysis interface to seamlessly access several model varieteis in R. (References xxx) 
-Different packages
+`Tidymodels` is the successor to the `caret` package which is used during the *Introduction to Data Science*-course of the Harvard University (Kuhn & Johnson, 2013; Irizarry, 2020). `Tidymodels` is a collection of modeling packages that, like the `tidyverse`, have consistent API and are designed to work together specifically to support predictive analytics and machine learning. Different books (Kuhn & Silge, 2021; Kuhn en Johnson, 2019) blogs (Lendway, 2020; Roamiar (2021); Ruiz (2019), Barter (2019; Seyedia (2021) and couses/video's (Lewis, 2020; Silge, 2021; Silge 2020) I followed and looked at. I tried to learn this new system and wrote different blogs in Dutch on this (Jonkman, 2021).    
 
+Core tidymodel packages include: parsnip, recipes, rsample and tune. Collectively, these packages provide a grammar for modeling that makes things a lot easier and provide a unified modeling and analysis interface to seamlessly access several model varieteis in R. 
+
+- `tidymodels` is a meta-package that installs and load the core packages listed below that you need for modeling and machine learning;   
+- `recipes` is tidy interface for to data pre-processing tools for feature/variables engineering;    
+- `rsample` provides infrastucture for efficient data splitting and resampling;   
+- `parsnip` is a tidy, unified interface to models that can be used to try a range of models without getting bagged down in the syntactical minutae of the underlying packages;   
+- `tune` helps you optimize the hyperparameters of your model and chose pre-processing steps;   
+- `yardstick` measures the effectiveness of models during performance metrics;   
+- `workflow` bundles your pre-processing modeling and post-processing together;   
+- `dials` creates and manages tuning parameters and parameters grids;   
+- `brooms` convert the information in common statistical R objects into user-friendly predictable formats.   
 
 Last months I tried to learn working with `tidymodels`. I tried to finish the Capstone course with the use of this packages. 
 
 
 # PROBLEM DEFINITION
-Data mining approaches are use to predict human wine taste preferences that are based on easily available analytical tests at certification step. A dataset on red wine from Portugal is used here to research quality of the wine and different predictors (Cortez et al., 2009) Supervised machine learning support us in this. In this world two kind of algorithms are often used. One is called regression and the other is called classification. In this study we use regression for predicting quality of wine based on the predictors.
+Data mining approaches are use to predict human wine taste preferences that are based on easily available analytical tests at certification step. A dataset on red wine from Portugal is used here to research quality of the wine and different predictors (Cortez et al., 2009) Supervised machine learning support us in this. In this world two kind of algorithms are often used. One is called regression (see also Attalides, 2020 for regression, which I expand in this articel) and the other is called classification (which I worked out also). 
 
-
-The wine data used here contains the following independent and dependent variables
+In this study we use regression for predicting quality of wine based on the predictors.The wine data used here contains the following independent and dependent variables
 
 Independent variables: (symbol I)
-- I1 Fixed acidity (g(tartaric acid/dm3)
-- I2 Volatile acidity (g(acetic acid)/dm3)
-- I3 Citric acid (g/dm3)
-- I4 Residual sugar (g/dm3)
-- I5 Chlorides (g(sodium chloride)/dm3)
-- I6 Free sulfar dioxide (mg/dm3)
-- I7 Total sulfar dioxide (mg/dm3)
-- I8 Density (g/cm3)
-- I9 pH
-- I10 Sulphates (g(potassium sulphate)/dm3)
-- I11 Alcohol (vol%)
+- I1 *Fixed acidity* (g(tartaric acid/dm3)
+- I2 *Volatile acidity* (g(acetic acid)/dm3)
+- I3 *Citric acid* (g/dm3)
+- I4 *Residual sugar* (g/dm3)
+- I5 *Chlorides* (g(sodium chloride)/dm3)
+- I6 *Free sulfar dioxide* (mg/dm3)
+- I7 *Total sulfar dioxide* (mg/dm3)
+- I8 *Density* (g/cm3)
+- I9 *pH*
+- I10 *Sulphates* (g(potassium sulphate)/dm3)
+- I11 *Alcohol* (vol%)
 
 Dependent variable: (symbol D)
-- D1 Quality
+- D1 *Quality*
 
 
 # DATA LOADING AND PREPROCESSING 
@@ -360,10 +369,6 @@ head(rf_pred)
 metrics(rf_pred, quality, pred)
 ```
 
-# CONCLUDING REMARKS
-
-[](https://towardsdatascience.com/modelling-with-tidymodels-and-parsnip-bae2c01c131c)
-
 # References
 Attalides, N. (2020). [Introduction to machine learning. Barcelona. Presentation](https://www.barcelonar.org/workshops/BarcelonaR_Introduction_to_Machine_Learning.pdf) 
 
@@ -386,6 +391,8 @@ Jonkman, H. (2019-2021). [Harrie's hoekje, his website with different blogs on m
 Kuhn, M. 7 Johnson, K. (2013). *Applied predictive modeling*. Springer: New York.
 
 Kuhn, M. & Johnson, K. (2019). [Feature engineering and selection: A practical approach for predictive models](www.feat.engineering)
+
+Kuhn, M. & Silge, J. (2021). Tydy modeling with R. [Bookdown version](https://www.tmwr.org/)
 
 Lendway, L. (2020). 2020_north-tidymodels.[Introduction on github](https://github.com/llendway/2020_north_tidymodels)
 
