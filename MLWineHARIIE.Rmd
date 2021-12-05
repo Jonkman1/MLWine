@@ -1,35 +1,21 @@
 ---
 title: "MachinelearningonWine"
 author: "Harrie"
-date: "22/05/2021"
-output: pdf_document
+date: "10/12/2021"
+output:
+  pdf_document:
+    latex_engine: xelatex
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-
-
-```{r}
-library(tidyverse)
-library(finalfit)
-library(tidymodels)
-library(caret)
-library(rpart)   
-library(randomForest)
 
 ```
-
-
-
 
 # INTRODUCTION
-`Tidymodels` is the successor to the `caret` package which is used during the *Introduction to Data Science*-course of the Harvard University (Kuhn & Johnson, 2013; Irizarry, 2020). `Tidymodels` is a collection of modeling packages that, like the `tidyverse`, have consistent API and are designed to work together specifically to support predictive analytics and machine learning. Different books (Kuhn & Silge, 2021; Kuhn en Johnson, 2019) blogs (Lendway, 2020; Roamiar (2021); Ruiz (2019), Barter (2019; Seyedia (2021) and couses/video's (Lewis, 2020; Silge, 2021; Silge 2020) I followed and looked at. I tried to learn this new system and wrote different blogs in Dutch on this (Jonkman, 2021).    
+`Tidymodels` is the relatively new package for machine learning with `R`. It is the successor to the `caret` package which is used during the *Introduction to Data Science*-course of the Harvard University (Kuhn & Johnson, 2013; Irizarry, 2020). `Tidymodels` is a collection of modeling packages that, like the `tidyverse`, has consistent API and are designed to work together specifically to support predictive analytics and machine learning. I followed and looked at different books (Kuhn & Silge, 2021; Kuhn en Johnson, 2019) blogs (Lendway, 2020; Roamiar (2021); Ruiz (2019), Barter (2019; Seyedia (2021) and couses/video's (Lewis, 2020; Silge, 2021; Silge 2020). I tried to learn this new system and wrote different blogs in Dutch on this (Jonkman, 2021).    
 
-Core tidymodel packages include: parsnip, recipes, rsample and tune. Collectively, these packages provide a grammar for modeling that makes things a lot easier and provide a unified modeling and analysis interface to seamlessly access several model varieteis in R. 
-
-- `tidymodels` is a meta-package that installs and load the core packages listed below that you need for modeling and machine learning;   
+The `tidymodel` package provides a suite of packages for machine learnig as does `tidyverse` does for data wrangling. `Tidymodels` is a grammar for modeling that makes things a lot easier and provides a unified modeling and analysis interface to seamlessly access several model varities in R. ``tidymodels` is a meta-package that installs and load the core packages listed below that you need for modeling and machine learning;   
 - `recipes` is tidy interface for to data pre-processing tools for feature/variables engineering;    
 - `rsample` provides infrastucture for efficient data splitting and resampling;   
 - `parsnip` is a tidy, unified interface to models that can be used to try a range of models without getting bagged down in the syntactical minutae of the underlying packages;   
@@ -39,13 +25,33 @@ Core tidymodel packages include: parsnip, recipes, rsample and tune. Collectivel
 - `dials` creates and manages tuning parameters and parameters grids;   
 - `brooms` convert the information in common statistical R objects into user-friendly predictable formats.   
 
-Last months I tried to learn working with `tidymodels`. I tried to finish the Capstone course with the use of this packages. 
+This year I learned working with `tidymodels`. I tried to finish the Capstone course with the use of this packages. I will show you the different steps in the working proces. Let us first open the packages used in this article (`tidymodels`, but also `tidyverse`, `finalfit`, `caret`, `rpart` and `randomforest`):
+
+
+```{r, include=FALSE}
+# ensure pacman is installed
+if(!require("pacman")) installed.packages("pacman")
+
+# install packages from CRAN 
+############################
+pacman::p_load(
+  
+tinytex,
+tidyverse,
+finalfit,
+tidymodels,
+caret,
+rpart, 
+ranger,
+randomForest)
+
+```
 
 
 # PROBLEM DEFINITION
-Data mining approaches are use to predict human wine taste preferences that are based on easily available analytical tests at certification step. A dataset on red wine from Portugal is used here to research quality of the wine and different predictors (Cortez et al., 2009) Supervised machine learning support us in this. In this world two kind of algorithms are often used. One is called regression (see also Attalides, 2020 for regression, which I expand in this articel) and the other is called classification (which I worked out also). 
+Data mining approaches are used in this article to predict human wine taste preferences that are based on easily available analytical tests at certification steps. A data set on red wine from Portugal is used here to research quality of the wine and different predictors for the quality (Cortez et al., 2009) Supervised machine learning supports us in this. In this world two kind of algorithms are often used. One is called regression (see also Attalides, 2020) and the other is called classification (not used here). 
 
-In this study we use regression for predicting quality of wine based on the predictors.The wine data used here contains the following independent and dependent variables
+In this study we use regression for predicting quality of wine based on several predictors.The wine data used here contains the following eleven independent variables (predictors, I1-I11) and one dependent variable (outcome, D1)
 
 Independent variables: (symbol I)
 - I1 *Fixed acidity* (g(tartaric acid/dm3)
@@ -63,57 +69,54 @@ Independent variables: (symbol I)
 Dependent variable: (symbol D)
 - D1 *Quality*
 
+# DATA LOADING, PREPROCESSING, EXPLORING
 
-# DATA LOADING AND PREPROCESSING 
+Let us load the data set (`wine.rds`) first.
 
-Let us first load the dataset.
-
-```{r}
+```{r, include=FALSE}
 wf<-readRDS("wine.rds")
 ```
 
-Let us give a summary of the data frame.
+Then, we look at the column names: 
 
-```{r}
-glimpse(wf)
+```{r, include=FALSE}
+colnames(wf)
 ```
 
-Do we see missings?
+And defined them on a consistent way.
 
-```{r}
-missing_glimpse(wf)
-```
-What kind of variables do we have and what are their scores?
-
-```{r}
-ff_glimpse(wf)
-```
-
-Let us make correlation matrix of the data.
-
-```{r}
-cor(wf)
-```
-
-Let us define the column names on a consistent way.
-
-```{r}
+```{r, include=FALSE}
 colnames(wf) <- wf %>% 
   colnames() %>% str_replace_all(pattern = " ", replacement = "_")
 colnames(wf)
 ```
 
-Let us also remove any missing values.
+Let us make an overview and summary now of this data frame.
 
 ```{r}
+glimpse(wf)
+summary(wf)
+```
+
+We have twelve variables inside this data set which are all continuous variables.
+
+At this moment we want to know also something about the missings?
+
+```{r, include=FALSE}
+missing_glimpse(wf)
+```
+
+We have eight missings (three on volatile.acidity and five on alcohol). We remove any missing values and kept 1591 cases. Let us show it here.
+
+```{r }
 wf <- na.omit(wf)
 
+missing_glimpse(wf)
 ```
 
 
-## EXPLORATIVE DATA ANALYSIS (EDA).
 
-Now we have preprocessed the data we explore them.  let us first visualise correlations within the dataset. For this you need the package `corrplot`
+Now we have wrangeled and preprocessed the data, we can explore them.  Let us first visualise correlations within the dataset. For this you need the package `corrplot`
 
 ```{r}
 library(corrplot)
@@ -127,9 +130,9 @@ wf %>% cor() %>%
 
 
 ## SPLITTING THE DATA
-Now we split the data into: a) Train set, b) Test set. Here we work on the last pre-model analysis. All functions below come from the `rsample` package, which is part of `tidymodels`. First we set the seed to fix the randomisation and to make reproducable possible. We use 80% of the dataset for the trainingset. We split it and than make a training- and test-dataset
+In this phase we understand the data and have to split the data into: a) Train set, b) Test set. Here we work on the last pre-model analysis. All functions below come from the `rsample` package, which is part of `tidymodels`. First we set the seed to fix the randomisation and to make reproducable possible. We use 80% of the dataset for the trainingset. For a big dataset as this winedata set with 1591 observations, 80:20 works well. We split it and than make a training- and test-dataset
 
-```{r}
+```{r, include=FALSE}
 set.seed(12345) 
 
 data_split <- initial_split(wf, prop = 0.8) 
@@ -142,13 +145,14 @@ test_data  <- testing(data_split)
 
 
 # MODELING AND DATA ANALYSIS 
+Now we compare different models with each other and we want to know which one works the best for this data set, with this dependent and these independent variables. This part of machine learning is called **supervised learning** of which the basic goal is to find a function that accurately describes how different measured explanatory variables can be combined to make a prediction about the target variable. We start with **lineair modellling**. Regression models can help us quantify the magnitude and direction of relationships among variables.
 
-## 1. Lineair modelling
-For the continues outcome or target variable `quality` we first research some different lineair regression models and choose the best one. For the below tasks, we store each formula in a different R object.
+## 1. Linear modelling
+For the outcome or target variable `quality`, we first research some different linear regression models and choose the best one based on indices. For these tasks, we store each formula in a different R object.
 
 We have to define the data: 
 - The target variable. `quality` is the target variable and it is numeric
-- The features of the model (predictors) are the other variables here and they are numeric also.
+- The features of the model (predictors) are the other (independent) variables here and they are numeric also.
 
 Futhermore, we esign a simple formula to predict the target variable. In this formula (f1) all the available 11 predictors are used.
 
@@ -160,11 +164,13 @@ formula <- formula(quality ~ fixed_acidity + volatile_acidity + citric_acid +
 
 
 Let us fit a linear regression model to the data. What we do:
-- We created an object that will store the model fit.    
-- We specify the model.   
-- We specify also that we work with regression because of the continue target variable (`quality`)
-- We specify also the `lm` package to train the model
-- We add the formula and the training data to fit the model
+- First, we created an object that will store the model fit.    
+- Then, we specify the model.   
+- Then, We specify also that we work with regression because of the continue target variable (`quality`)
+- Then, we specify also the `lm` package to train the model
+- And we finish in this chunck by adding the formula and the training data to fit the model.
+
+Let us see how this works.
 
 ```{r}
 lm_fit <- 
@@ -174,19 +180,19 @@ lm_fit <-
   fit(formula, data = train_data) 
 ```
 
-Show the results
+We present the results on different ways 
 
-```{r}
+```{r, include=FALSE}
 print(lm_fit$fit)
 ```
 
-Show the results in another way.
+But this is probably the best and clearest way to show the results.
 
 ```{r}
 summary(lm_fit$fit)
 ```
 
-We can also visualise the fit summary by using the `broom` package which is inside `tidymodels`.
+We can also visualize the fit summary by using the `broom` package which is inside `tidymodels`.
 
 ```{r}
 tidy(lm_fit$fit) %>% mutate_if(is.numeric, round, 3)
@@ -194,14 +200,15 @@ tidy(lm_fit$fit) %>% mutate_if(is.numeric, round, 3)
 
 
 ## 2. Decision tree
-After we worked with lineair regression, it is possible to work with other models which maybe give us better results. Let us first look at decision tree. For this you need decision tree and for this you have to install and open the library of `rpart`. We see similar steps here
-- defining an object `dt_fit`   
-- telling that we work with decision tree   
-- once again set the mode on regression   
-- once again set the engine on `rpart`   
+After we worked with linear regression, it is possible to work with other models which maybe give us better results for predicting the outcome. Let us first look at decision tree modeling . A decision tree is tree-like flowchart that assigns labels to individual observations. It splits it into homogeneous subsets, which share the same class labels. For this you need decision tree package and for this you have to install and open the library of `rpart`. We see similar steps here in the machine learning workflow. 
+Once again:
+- define an object `dt_fit`   
+- tell that we work with decision tree   
+- set the mode on regression   
+- set the engine on `rpart`   
 - fit the formula on the training data-set   
 
-```{r}
+```{r, include=FALSE}
 
 dt_fit <- 
   decision_tree() %>% 
@@ -216,7 +223,7 @@ Print the results
 print(dt_fit$fit)
 ```
 
-As a sidestep we can visualise this, but than we have to install and open the `visNetwork` and `sparkline` packages. Then we see this.
+As a sidestep we can visualize this, but than we have to install and open the `visNetwork` and `sparkline` packages. Then we see this.
 
 ```{r}
 library(visNetwork)
@@ -225,14 +232,15 @@ visTree(dt_fit$fit)
 ```
 
 ## 3. Random forest
-A third model we use here is RandomForest.You need to install `randomForest` and open the library `randomForest`. And again the same steps:
+A third model we use here is RandomForest.RandomForest is a natural extension of DecisionTree. A RandomForest is a collection of Deciontrees that are aggregated by majority rule, and is in essence a collection 'bootstrapped' decision trees. You need to install `randomForest` package and open the library `randomForest`. 
+And also here, once again the same steps:
 - define object `rf_fit`    
 - tell we want to use randomforst    
 - set the mode again on regression      
 - set the engine here on randomForest    
 - fit the model on the training_set   
 
-```{r}
+```{r, include=FALSE}
 rf_fit <- 
   rand_forest() %>% 
   set_mode("regression") %>%
@@ -240,7 +248,7 @@ rf_fit <-
   fit(formula, data = train_data)
 ```
 
-Print these results.
+Print these results (not shown here).
 
 ```{r}
 print(rf_fit$fit)
@@ -250,23 +258,25 @@ print(rf_fit$fit)
 
 # EVALUATION AND PREDICTION
 
-Now we have three objects which we have to evaluate. We do this on the test-set. We compare three models (`lm_fit`, `dt_fit` and `rf_fit`) on the MSE score.
+Now we have three objects of the three models we ran and which we have to compare and evaluate. We do this on the test-set. We compare the three models (`lm_fit`, `dt_fit` and `rf_fit`) on the Men Square Score (MSE) score. We need to find a model algoritm that produces predictors for the outcome (`quality`) that minimizes the MSE-score. So, the lower the mse-score of the model, the better.
 
-## Accuracy of the lm-model
+## 1. Accuracy of the lm-model
 
-```{r}
+Let us first look at the accuracy of the linear-model.
+
+```{r, include=FALSE}
 lm_pred <- test_data %>% 
   bind_cols(predict(object = lm_fit, new_data = test_data))
 ```
 
 Now we see a new column, `.pred`, with a predicted scores for each row. 
 
-```{r}
-View(lm_pred)
+```{r, include=FALSE}
+#View(lm_pred)
 
 ```
 
-```{r}
+```{r,include=FALSE}
 lm_pred <- test_data %>% 
   bind_cols(predict(object = lm_fit, new_data = test_data)) %>% 
   mutate(pred = round(.pred, 0))
@@ -274,41 +284,45 @@ lm_pred <- test_data %>%
 ```
 
 
-```{r}
+```{r, include=FALSE}
 lm_mse <- lm_pred %>% 
   summarise(type = "lm",
             MSE = round(mean((pred - quality)^2), 4))
 ```
 
+It gives here the following mse-score for lineair modeling, which we show here
 
 ```{r}
 head(lm_mse)
 ```
 
 
-## Accuracy of the Decision Tree Model
+## 2. Accuracy of the Decision Tree Model
+Then we look at the accuracy of the DecisionTree Model
 
-```{r}
+```{r, include=FALSE}
 dt_pred <- test_data %>% 
   bind_cols(predict(object = dt_fit, new_data = test_data)) %>% 
   rename(pred = .pred) %>% 
   mutate(pred = round(pred, 0))
 ```
 
-```{r}
+```{r, include=FALSE}
 dt_mse <- dt_pred %>% 
   summarise(type = "dt",
             MSE = round(mean((pred - quality)^2), 4))
 ```
 
+The decision model gives the following mse-score:
 
 ```{r}
 head(dt_mse)
 ```
 
-## Accuracy of the Random Forest Model
+## 3. Accuracy of the Random Forest Model
+And then ofcourse we also have to look at the accuracy of the RandomForest-model. 
 
-```{r}
+```{r, include=FALSE}
 rf_pred <- test_data %>% 
   bind_cols(predict(object = rf_fit, new_data = test_data)) %>% 
   rename(pred = .pred) %>% 
@@ -316,12 +330,13 @@ rf_pred <- test_data %>%
 ```
 
 
-```{r}
+```{r, include=FALSE}
 rf_mse <- rf_pred %>% 
   summarise(type = "rf",
             MSE = round(mean((pred - quality)^2), 4))
 ```
 
+The Random Forest Model gives us the following mse-score:
 
 ```{r}
 head(rf_mse)
@@ -332,42 +347,46 @@ head(rf_mse)
 
 ## All results together
 
-Let us put all the results together.
+Let us put all the results together and compare them with each other.
 
-```{r}
+```{r, include=FALSE}
 res <- bind_rows(lm_mse, dt_mse, rf_mse)
 ```
 
 
-Let us show these results.
+Let us show these results together.
 
 ```{r}
 head(res)
 ```
+
 We choose the random_forest model as the best opportunity here. Let us look at it once again.
 
 ```{r}
-View(rf_pred)
-```
-
-```{r}
 head(rf_pred)
 ```
 
 
-# RESULTS SUMMARIZED
+# CONCLUSION
 
+In this simple scenario, we were interested in seeing how the model performs on the testing data that were left out. The code below will fit the model to the training data and apply it to the testing data. There are other ways we could have done this, but the way we do it here will be useful when we start using more complex models where we need to tune model parameters. Root Mean Square Error (RMSE) is a standard way to measure the error of a model in predicting quantitative data. RMSE is a good measure to use if we want to estimate the standard deviation σ of a typical observed value from our model’s prediction, R-squared is a statistical measure that represents the goodness of fit of a regression model. The ideal value for r-square is 1. The closer the value of r-square to 1, the better is the model fitted. In Machine Learning, MAE is a model evaluation metric often used with regression models. After the model is fitted and applied, we collected the performance metrics and display them and show the predictions from the testing data. Altogether the prediction scores don't look very well, but we know that RandomForest is the best model for prediction.
 
-In this simple scenario, we may be interested in seeing how the model performs on the testing data that was left out. The code below will fit the model to the training data and apply it to the testing data. There are other ways we could have done this, but the way we do it here will be useful when we start using more complex models where we need to tune model parameters.
-
-After the model is fit and applied, we collect the performance metrics and display them and show the predictions from the testing data.
-
-```{r}
-head(rf_pred)
-```
 ```{r}
 metrics(rf_pred, quality, pred)
 ```
+
+```{r, include=F}
+ifelse(rf_pred$quality==rf_pred$pred, "Yes", "No")
+```
+
+$105/307*100= 34,2%%$ is wrong, which is a the end a bit disappointing after all the work. But we know what the best model is for this dataset. This work has some **strengths** We found a uniform and consistent way to compare models with each and to choose the best one out of them. One of the big advantages of the random forest model which is choosen her is the versality and flexibility. It can be used for both regression and classification problems. But this work has also some **limitations**. Random forest is good for predictions and not that good for prediction, so this could not be used by the researcher for interpretation. He found himself restricted here. A limitation of random fores is that this algorithm is fast to train, but quit slow to create predictions once they are trained: a more accurate prediction needs more trees, which results in a slower model. And a last limitation which we have to mention here is, that we used only three models and maybe other models were better for these data. 
+
+Lesson learned is that we found a consitent workflow for analyzing data as presented here on quality of wine.The next step would be now to work on increasing the predictive power of the model and start with tuning on the hyperparameters. 
+
+
+
+
+ 
 
 # References
 Attalides, N. (2020). [Introduction to machine learning. Barcelona. Presentation](https://www.barcelonar.org/workshops/BarcelonaR_Introduction_to_Machine_Learning.pdf) 
