@@ -1,7 +1,7 @@
 ---
-title: "MachinelearningonWine"
-author: "Harrie"
-date: "10/12/2021"
+title: "Machinelearning and predicting the quality of wine"
+author: "Harrie Jonkman"
+date: "12/12/2021"
 output:
   pdf_document:
     latex_engine: xelatex
@@ -12,7 +12,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
+
 # INTRODUCTION
+
 `Tidymodels` is the relatively new package for machine learning with `R`. It is the successor to the `caret` package which is used during the *Introduction to Data Science*-course of the Harvard University (Kuhn & Johnson, 2013; Irizarry, 2020). `Tidymodels` is a collection of modeling packages that, like the `tidyverse`, has consistent API and are designed to work together specifically to support predictive analytics and machine learning. I followed and looked at different books (Kuhn & Silge, 2021; Kuhn en Johnson, 2019) blogs (Lendway, 2020; Roamiar (2021); Ruiz (2019), Barter (2019; Seyedia (2021) and couses/video's (Lewis, 2020; Silge, 2021; Silge 2020). I tried to learn this new system and wrote different blogs in Dutch on this (Jonkman, 2021).    
 
 The `tidymodel` package provides a suite of packages for machine learnig as does `tidyverse` does for data wrangling. `Tidymodels` is a grammar for modeling that makes things a lot easier and provides a unified modeling and analysis interface to seamlessly access several model varities in R. ``tidymodels` is a meta-package that installs and load the core packages listed below that you need for modeling and machine learning;   
@@ -43,12 +45,14 @@ tidymodels,
 caret,
 rpart, 
 ranger,
+vip,
 randomForest)
 
 ```
 
 
 # PROBLEM DEFINITION
+
 Data mining approaches are used in this article to predict human wine taste preferences that are based on easily available analytical tests at certification steps. A data set on red wine from Portugal is used here to research quality of the wine and different predictors for the quality (Cortez et al., 2009) Supervised machine learning supports us in this. In this world two kind of algorithms are often used. One is called regression (see also Attalides, 2020) and the other is called classification (not used here). 
 
 In this study we use regression for predicting quality of wine based on several predictors.The wine data used here contains the following eleven independent variables (predictors, I1-I11) and one dependent variable (outcome, D1)
@@ -68,6 +72,7 @@ Independent variables: (symbol I)
 
 Dependent variable: (symbol D)
 - D1 *Quality*
+
 
 # DATA LOADING, PREPROCESSING, EXPLORING
 
@@ -114,8 +119,6 @@ wf <- na.omit(wf)
 missing_glimpse(wf)
 ```
 
-
-
 Now we have wrangeled and preprocessed the data, we can explore them.  Let us first visualise correlations within the dataset. For this you need the package `corrplot`
 
 ```{r}
@@ -128,8 +131,8 @@ wf %>% cor() %>%
 ```
 
 
-
 ## SPLITTING THE DATA
+
 In this phase we understand the data and have to split the data into: a) Train set, b) Test set. Here we work on the last pre-model analysis. All functions below come from the `rsample` package, which is part of `tidymodels`. First we set the seed to fix the randomisation and to make reproducable possible. We use 80% of the dataset for the trainingset. For a big dataset as this winedata set with 1591 observations, 80:20 works well. We split it and than make a training- and test-dataset
 
 ```{r, include=FALSE}
@@ -145,6 +148,7 @@ test_data  <- testing(data_split)
 
 
 # MODELING AND DATA ANALYSIS 
+
 Now we compare different models with each other and we want to know which one works the best for this data set, with this dependent and these independent variables. This part of machine learning is called **supervised learning** of which the basic goal is to find a function that accurately describes how different measured explanatory variables can be combined to make a prediction about the target variable. We start with **lineair modellling**. Regression models can help us quantify the magnitude and direction of relationships among variables.
 
 ## 1. Linear modelling
@@ -255,10 +259,10 @@ print(rf_fit$fit)
 ```
 
 
-
 # EVALUATION AND PREDICTION
 
 Now we have three objects of the three models we ran and which we have to compare and evaluate. We do this on the test-set. We compare the three models (`lm_fit`, `dt_fit` and `rf_fit`) on the Men Square Score (MSE) score. We need to find a model algoritm that produces predictors for the outcome (`quality`) that minimizes the MSE-score. So, the lower the mse-score of the model, the better.
+
 
 ## 1. Accuracy of the lm-model
 
@@ -272,7 +276,7 @@ lm_pred <- test_data %>%
 Now we see a new column, `.pred`, with a predicted scores for each row. 
 
 ```{r, include=FALSE}
-#View(lm_pred)
+View(lm_pred)
 
 ```
 
@@ -319,6 +323,7 @@ The decision model gives the following mse-score:
 head(dt_mse)
 ```
 
+
 ## 3. Accuracy of the Random Forest Model
 And then ofcourse we also have to look at the accuracy of the RandomForest-model. 
 
@@ -328,7 +333,6 @@ rf_pred <- test_data %>%
   rename(pred = .pred) %>% 
   mutate(pred = round(pred, 0))
 ```
-
 
 ```{r, include=FALSE}
 rf_mse <- rf_pred %>% 
@@ -341,8 +345,6 @@ The Random Forest Model gives us the following mse-score:
 ```{r}
 head(rf_mse)
 ```
-
-
 
 
 ## All results together
@@ -359,8 +361,25 @@ Let us show these results together.
 ```{r}
 head(res)
 ```
+Altogether the prediction scores don't look very well, but we know that RandomForest is the best model for prediction.
 
-We choose the random_forest model as the best opportunity here. Let us look at it once again.
+```{r}
+metrics(rf_pred, quality, pred)
+```
+
+Now we choosed the random forest model we can look at the importance of the ten independent vqriables and compare them with each other. We see that alcohol is the most import predictor followed by sulphates ad volatile_acidity. Residul-sugar, pH and fixed_acidity are the lowest important predictors for quality of wine.
+
+```{r}
+library(vip)
+vip(rf_fit)
+```
+Let us look at which percentage of the testsample are wrongly predicted.
+
+```{r, include=F}
+ifelse(rf_pred$quality==rf_pred$pred, "Yes", "No")
+```
+
+$105/307*100= 34,2%$ is not correctly predicted. So $65,8% is predicted correctly with this model. We choose the random_forest model as the best opportunity here. Let us look at it once again.
 
 ```{r}
 head(rf_pred)
@@ -369,26 +388,13 @@ head(rf_pred)
 
 # CONCLUSION
 
-In this simple scenario, we were interested in seeing how the model performs on the testing data that were left out. The code below will fit the model to the training data and apply it to the testing data. There are other ways we could have done this, but the way we do it here will be useful when we start using more complex models where we need to tune model parameters. Root Mean Square Error (RMSE) is a standard way to measure the error of a model in predicting quantitative data. RMSE is a good measure to use if we want to estimate the standard deviation σ of a typical observed value from our model’s prediction, R-squared is a statistical measure that represents the goodness of fit of a regression model. The ideal value for r-square is 1. The closer the value of r-square to 1, the better is the model fitted. In Machine Learning, MAE is a model evaluation metric often used with regression models. After the model is fitted and applied, we collected the performance metrics and display them and show the predictions from the testing data. Altogether the prediction scores don't look very well, but we know that RandomForest is the best model for prediction.
+In this simple scenario, we were interested in seeing how the model performs on the testing data that were left out. The code below will fit the model to the training data and apply it to the testing data. There are other ways we could have done this, but the way we do it here will be useful when we start using more complex models where we need to tune model parameters. Root Mean Square Error (RMSE) is a standard way to measure the error of a model in predicting quantitative data. RMSE is a good measure to use if we want to estimate the standard deviation σ of a typical observed value from our model’s prediction, R-squared is a statistical measure that represents the goodness of fit of a regression model. The ideal value for r-square is 1. The closer the value of r-square to 1, the better is the model fitted. In Machine Learning, MAE is a model evaluation metric often used with regression models. After the model is fitted and applied, we collected the performance metrics and display them and show the predictions from the testing data.  34,2% is predicted wrong, which is a the end maybe a bit disappointing after all the work. But we know what the best model is for this dataset. This work has some **strengths** We found a uniform and consistent way to compare models with each and to choose the best one out of them. One of the big advantages of the random forest model which is choosen her is the versality and flexibility. It can be used for both regression and classification problems. But this work has also some **limitations**. Random forest is good for predictions and not that good for prediction, so this could not be used by the researcher for interpretation. He found himself restricted here. A limitation of random fores is that this algorithm is fast to train, but quit slow to create predictions once they are trained: a more accurate prediction needs more trees, which results in a slower model. And a last limitation which we have to mention here is, that we used only three models and maybe other models were better for these data. 
 
-```{r}
-metrics(rf_pred, quality, pred)
-```
+Lesson learned is that we found a consitent workflow for analyzing data as presented here on quality of wine. It is aa very good starting point for further research. The next step would be now to work on increasing the predictive power of the model and start with tuning on the hyperparameters. 
 
-```{r, include=F}
-ifelse(rf_pred$quality==rf_pred$pred, "Yes", "No")
-```
-
-$105/307*100= 34,2%%$ is wrong, which is a the end a bit disappointing after all the work. But we know what the best model is for this dataset. This work has some **strengths** We found a uniform and consistent way to compare models with each and to choose the best one out of them. One of the big advantages of the random forest model which is choosen her is the versality and flexibility. It can be used for both regression and classification problems. But this work has also some **limitations**. Random forest is good for predictions and not that good for prediction, so this could not be used by the researcher for interpretation. He found himself restricted here. A limitation of random fores is that this algorithm is fast to train, but quit slow to create predictions once they are trained: a more accurate prediction needs more trees, which results in a slower model. And a last limitation which we have to mention here is, that we used only three models and maybe other models were better for these data. 
-
-Lesson learned is that we found a consitent workflow for analyzing data as presented here on quality of wine.The next step would be now to work on increasing the predictive power of the model and start with tuning on the hyperparameters. 
-
-
-
-
- 
 
 # References
+
 Attalides, N. (2020). [Introduction to machine learning. Barcelona. Presentation](https://www.barcelonar.org/workshops/BarcelonaR_Introduction_to_Machine_Learning.pdf) 
 
 Barter, R.(2020). [Tidymodels: tidy machine learning in R](http://www.rebeccabarter.com/blog/2020-03-25_machine_learning/) 
